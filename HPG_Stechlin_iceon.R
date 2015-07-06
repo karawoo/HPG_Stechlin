@@ -211,7 +211,7 @@ seqs <- mapply(function(x, y) seq(x, y, by = "day"), startend$min, startend$max)
 ## Make the dates into a data frame
 alldates <- data.frame(Date = do.call("c", seqs)) 
 
-## Merge the data frame back in with icedat and use na.locf to fill in missing values
+## Merge the data frame back in with Stech.ice.filt and use na.locf to fill in missing values
 
 Stech.ice.full <- merge(Stech.ice.filt, alldates, by="Date", all = TRUE) %>%
   mutate(Ice = na.locf(Ice), #fills in ice values (runs last value forward through NAs until hit next value)
