@@ -69,6 +69,7 @@ Stech.cor <- rename(Stech.cor, Date = Datum, Depth = Tiefe..m., DOC = DOC..mg.l.
 
 
 #find total dissolved N (NO2+NO3+NH4)
+## Note that this will result in NAs if any of the three columns contains an NA.
 
 Stech.cor <- mutate(Stech.cor,
                     totdissN = (NO2 + NO3 + NH4))
