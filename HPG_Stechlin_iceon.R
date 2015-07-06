@@ -173,11 +173,11 @@ Stech.ice$Date <- as.Date(Stech.ice$Date, "%m/%d/%Y")
 
 Stech.ice.filt <- filter(Stech.ice, Date >= "1990-01-01")
 
-## This script takes the ice dates that Hans-Peter Grossart sent us for Grosse
-## Fuchskuhle and expands the data frame of dates so that there is a row for
-## each date in each year. It then uses na.locf() to fill in ice
-## percentages for each date (a highly imperfect strategy, but good enough for
-## us to figure out which dates to aggregate into an ice-on aggregation).
+## This script takes the ice dates that Hans-Peter Grossart sent us for Lake
+## Stechlin and expands the data frame of dates so that there is a row for each
+## date in each year. It then uses na.locf() to fill in ice percentages for each
+## date (a highly imperfect strategy, but good enough for us to figure out which
+## dates to aggregate into an ice-on aggregation).
 
 # Note that this is different than the Fuchskuhle ice day strategy.
 # The existing Stechlin data is nearly complete (covers most days)
