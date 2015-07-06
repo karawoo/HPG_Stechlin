@@ -88,7 +88,8 @@ Stech.go <- Stech.cor[keep2]
 # of spreadsheet were removed prior to importing
 
 
-Stech.probe <- read.csv("hans_peter_grossart_data_DONOTSHARE/St_1990-2015_probe.csv", stringsAsFactors = FALSE)
+Stech.probe <- read.csv("St_1990-2015_probe.csv", stringsAsFactors = FALSE,
+                        fileEncoding = "latin1")
 
 
 #rename columns from German to English
