@@ -26,7 +26,8 @@ Stech.chem <- read.csv("hans_peter_grossart_data_DONOTSHARE/Stechlin_chemistry_1
 
 #create new dataframe with date, TP, TN, all N, DOC, and Chla
 
-vars <- c("Datum", "Tiefe..m.", "TP..mg.l.", "TN..mg.l.", "NO2..mg.l.", "NO3..mg.l.", "NH4..mg.l.", "DOC..mg.l.", "Chla..mg.l.")
+vars <- c("Datum", "Tiefe..m.", "TP..mg.l.", "TN..mg.l.", "NO2..mg.l.",
+          "NO3..mg.l.", "NH4..mg.l.", "DOC..mg.l.", "Chla..mg.l.")
 
 Stech.vars <- Stech.chem[vars]
 
@@ -94,7 +95,8 @@ Stech.probe <- read.csv("St_1990-2015_probe.csv", stringsAsFactors = FALSE,
 
 #rename columns from German to English
 
-Stech.pr.cor <- rename(Stech.probe, Date = Datum, Secchi = Sichttiefe..m., Depth = Tiefe..m., Temp = Temp....C.)
+Stech.pr.cor <- rename(Stech.probe, Date = Datum, Secchi = Sichttiefe..m.,
+                       Depth = Tiefe..m., Temp = Temp....C.)
 
 #secchi is in m
 #depth is in m
@@ -298,11 +300,14 @@ Stech.ice.chem.full <- Stech.ice.chem.filt %>%
 
 #then remove excess columns - all created columns have all the data they need 
 
-keep.full <- c("Date", "Ice", "Snow", "Depth", "photicdepth", "stationdepth", "sampledepth", "StartDate", "EndDate", 
-               "periodn", "avesecchidepth", "cvsecchidepth", "avetotphos", "cvtotphos", "maxtotphos",
-               "avetotdissphos", "cvtotdissphos", "maxtotdissphos", "avetotnitro", "cvtotnitro",
-               "maxtotnitro", "avetotdissnitro", "cvtotdissnitro", "maxtotdissnitro", "avetotdoc",
-               "cvtotdoc", "maxtotdoc", "avechla", "cvchla", "maxchla")
+keep.full <- c("Date", "Ice", "Snow", "Depth", "photicdepth", "stationdepth",
+               "sampledepth", "StartDate", "EndDate", "periodn",
+               "avesecchidepth", "cvsecchidepth", "avetotphos", "cvtotphos",
+               "maxtotphos", "avetotdissphos", "cvtotdissphos",
+               "maxtotdissphos", "avetotnitro", "cvtotnitro", "maxtotnitro",
+               "avetotdissnitro", "cvtotdissnitro", "maxtotdissnitro",
+               "avetotdoc", "cvtotdoc", "maxtotdoc", "avechla", "cvchla",
+               "maxchla")
 
 Stech.ice.chem.full <- Stech.ice.chem.full[keep.full]
 
@@ -333,7 +338,8 @@ Stech.tmp <- rename(Stech.tmp, Depth.pr = Depth)
 #merge with full ice/chem df
 #keep ice/chem rows even if no matching temp
 
-Stech.ice.chem.final <- merge(Stech.ice.chem.full, Stech.tmp, by = "Date", all.x = TRUE, all.y = FALSE)
+Stech.ice.chem.final <- merge(Stech.ice.chem.full, Stech.tmp, by = "Date",
+                              all.x = TRUE, all.y = FALSE)
 
 #find average temp of samples less than or equal to sampledepth (max depth sampled within photic depth range)
 
@@ -380,9 +386,13 @@ Stech.iceon.final <- as.data.frame(Stech.iceon.final)
 #make start and end day, month, and year columns
 #convert month to abbrev
 
-Stech.iceon.final <- mutate(Stech.iceon.final, startday = day(StartDate), startmonth = month(StartDate), 
-                           startyear = year(StartDate), endday=day(EndDate), endmonth = month(EndDate),
-                           endyear = year(EndDate))
+Stech.iceon.final <- mutate(Stech.iceon.final,
+                            startday = day(StartDate),
+                            startmonth = month(StartDate),
+                            startyear = year(StartDate),
+                            endday = day(EndDate),
+                            endmonth = month(EndDate),
+                            endyear = year(EndDate))
 
 Stech.iceon.final$startmonth <- month.abb[Stech.iceon.final$startmonth]
 
