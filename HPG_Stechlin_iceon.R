@@ -333,15 +333,11 @@ Stech.iceon.final <- Stech.ice.chem.tmp %>%
 
 Stech.iceon.final <- mutate(Stech.iceon.final,
                             startday = day(StartDate),
-                            startmonth = month(StartDate),
+                            startmonth = month.abb[month(StartDate)],
                             startyear = year(StartDate),
                             endday = day(EndDate),
-                            endmonth = month(EndDate),
+                            endmonth = month.abb[month(EndDate)],
                             endyear = year(EndDate))
-
-Stech.iceon.final$startmonth <- month.abb[Stech.iceon.final$startmonth]
-
-Stech.iceon.final$endmonth <- month.abb[Stech.iceon.final$endmonth]
 
 Stech.iceon.final <- select(Stech.iceon.final, -StartDate, -EndDate)
 
