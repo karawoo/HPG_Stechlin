@@ -7,6 +7,7 @@
 # HPG for Lake Stechlin and converts, reorganizes, and aggregates the data
 # to meet the specifications of the under ice ecology template and instructions
 
+library("icetest")
 
 #### set working directory ####
 
@@ -260,62 +261,6 @@ Stech.ice.chem.filt <- filter(Stech.ice.chem, Ice + Snow >= 80)
 #which would meet ice+snow iceon conditions
 
 
-############################# begin aggregating #####################################
-
-#grouped by year
-#will end up with one row per year (for this iceon season)
-#with start and end dates for iceon period
-
-
-Stech.ice.chem.full <- Stech.ice.chem.filt %>% 
-  ungroup %>% 
-  group_by(year(Date)) %>% 
-  mutate(StartDate = min(Date), 
-         EndDate = max(Date),
-         periodn = length(Date),
-         photicdepth = mean(PhoticDepth, na.rm = TRUE), #average photic depth for sample period
-         stationdepth = NA,
-         sampledepth = max(Depth),
-         avesecchidepth = mean(Secchi, na.rm = TRUE),
-         cvsecchidepth = sd(Secchi, na.rm = TRUE)/mean(Secchi, na.rm = TRUE),
-         avetotphos = mean(TP, na.rm = TRUE),
-         cvtotphos = sd(TP, na.rm = TRUE)/mean(TP, na.rm = TRUE),
-         maxtotphos = max(TP, na.rm = TRUE),
-         avetotdissphos = NA,
-         cvtotdissphos = NA,
-         maxtotdissphos = NA,
-         avetotnitro = mean(TN, na.rm = TRUE),
-         cvtotnitro = sd(TN, na.rm = TRUE)/mean(TN, na.rm = TRUE),
-         maxtotnitro = max(TN, na.rm = TRUE),
-         avetotdissnitro = mean(totdissN, na.rm = TRUE),
-         cvtotdissnitro = sd(totdissN, na.rm = TRUE)/mean(totdissN, na.rm = TRUE),
-         maxtotdissnitro = max(totdissN, na.rm = TRUE),
-         avetotdoc = mean(DOC, na.rm = TRUE),
-         cvtotdoc = sd(DOC, na.rm = TRUE)/mean(DOC, na.rm = TRUE),
-         maxtotdoc = max(DOC, na.rm = TRUE),
-         avechla = mean(Chla, na.rm = TRUE),
-         cvchla = sd(Chla, na.rm = TRUE)/mean(Chla, na.rm = TRUE),
-         maxchla = max(Chla, na.rm = TRUE)) 
-
-
-#then remove excess columns - all created columns have all the data they need 
-
-keep.full <- c("Date", "Ice", "Snow", "Depth", "photicdepth", "stationdepth",
-               "sampledepth", "StartDate", "EndDate", "periodn",
-               "avesecchidepth", "cvsecchidepth", "avetotphos", "cvtotphos",
-               "maxtotphos", "avetotdissphos", "cvtotdissphos",
-               "maxtotdissphos", "avetotnitro", "cvtotnitro", "maxtotnitro",
-               "avetotdissnitro", "cvtotdissnitro", "maxtotdissnitro",
-               "avetotdoc", "cvtotdoc", "maxtotdoc", "avechla", "cvchla",
-               "maxchla")
-
-Stech.ice.chem.full <- Stech.ice.chem.full[keep.full]
-
-#format - data frame
-
-Stech.ice.chem.full <- as.data.frame(Stech.ice.chem.full)
-
-
 #################### add in water temp data ####################
 
 #probe data (including water temp) sampled at different depths than chem data
@@ -333,53 +278,53 @@ Stech.tmp$Secchi <- NULL
 
 #rename Depth column to distinguish from chem depth
 
-Stech.tmp <- rename(Stech.tmp, Depth.pr = Depth)
+## Keep only dates of interest
+Stech.tmp <- filter(Stech.tmp, Date %in% Stech.ice.chem.filt$Date)
 
-#merge with full ice/chem df
-#keep ice/chem rows even if no matching temp
+## combine with ice/chem df
+Stech.ice.chem.tmp <- rbind_list(Stech.ice.chem.filt, Stech.tmp)
 
-Stech.ice.chem.final <- merge(Stech.ice.chem.full, Stech.tmp, by = "Date",
-                              all.x = TRUE, all.y = FALSE)
-
-#find average temp of samples less than or equal to sampledepth (max depth sampled within photic depth range)
-
-#within a StartDate
-#edit merged df to remove rows where Depth.pr is greater than sample depth
-#find avg. temp of remaining rows
-#remove temp and depth.pr columns
-#keep only unique values (remove repeat rows)
-
-Stech.ice.chem.final <- Stech.ice.chem.final %>% 
-                        group_by(StartDate) %>% 
-                        mutate(Depth.pr = ifelse(Depth.pr > sampledepth, NA, Depth.pr)) %>% 
-                        filter(!is.na(Depth.pr)) %>% 
-                        mutate(watertemp = mean(Temp)) %>% #avg. temp over depth range within photic range
-                        select(-Temp, -Depth.pr) %>% #remove temp and depth.pr
-                        unique() #only unique values
+## compute seasonal averages for chemistry and temp data
+Stech.iceon.final <- Stech.ice.chem.tmp %>%
+  group_by(year(Date)) %>%
+  filter(Depth <= max(PhoticDepth, na.rm = TRUE)) %>%
+  summarize(StartDate = min(Date), 
+            EndDate = max(Date),
+            periodn = length(unique(Date)),
+            photicdepth = mean(PhoticDepth, na.rm = TRUE), #average photic depth for sample period
+            stationdepth = NA,
+            sampledepth = max(Depth),
+            avesecchidepth = mean(Secchi, na.rm = TRUE),
+            cvsecchidepth = sd(Secchi, na.rm = TRUE)/mean(Secchi, na.rm = TRUE),
+            avetotphos = mean(TP, na.rm = TRUE),
+            cvtotphos = sd(TP, na.rm = TRUE)/mean(TP, na.rm = TRUE),
+            maxtotphos = max(TP, na.rm = TRUE),
+            avetotdissphos = NA,
+            cvtotdissphos = NA,
+            maxtotdissphos = NA,
+            avetotnitro = mean(TN, na.rm = TRUE),
+            cvtotnitro = sd(TN, na.rm = TRUE)/mean(TN, na.rm = TRUE),
+            maxtotnitro = max(TN, na.rm = TRUE),
+            avetotdissnitro = mean(totdissN, na.rm = TRUE),
+            cvtotdissnitro = sd(totdissN, na.rm = TRUE)/mean(totdissN, na.rm = TRUE),
+            maxtotdissnitro = max(totdissN, na.rm = TRUE),
+            avetotdoc = mean(DOC, na.rm = TRUE),
+            cvtotdoc = sd(DOC, na.rm = TRUE)/mean(DOC, na.rm = TRUE),
+            maxtotdoc = max(DOC, na.rm = TRUE),
+            avechla = mean(Chla, na.rm = TRUE),
+            cvchla = sd(Chla, na.rm = TRUE)/mean(Chla, na.rm = TRUE),
+            maxchla = max(Chla, na.rm = TRUE),
+            watertemp = mean(Temp, na.rm = TRUE)) %>%
+  ## Keep columns that are present in the ice data template,
+  ## plus StartDate and EndDate
+  ## (`datafields` is defined in the icetest package, which must be loaded)
+  select_(.dots = names(.)[names(.) %in% c(datafields, "StartDate", "EndDate")]) %>%
+  ## Add year column
+  mutate(year = year(EndDate))
 
 #mean water temp double checked in excel
 #2.6 is indeed the average temp within 0-20 m (photic zone) for 2/14/1996 (sample date)
 
-#result is df with avg water temp
-#only column with differences among rows is depth (chem depth)
-
-#clean up df:
-#keep only row where Depth = sampledepth
-#(only need one row per season, this is just a simple way to pick a row - other than depth col, they are identical)
-#remove Ice, Snow, Depth, and Date
-#rename PhoticDepth to lowercase
-#add a year column
-#remove Date column
-#keep only unique rows
-
-Stech.iceon.final <- Stech.ice.chem.final %>% 
-                    filter(Depth == sampledepth) %>% 
-                    select(-Ice, -Snow, -Depth) %>% 
-                    mutate(year = year(EndDate)) %>% 
-                    select(-Date) %>% 
-                    unique()
-
-Stech.iceon.final <- as.data.frame(Stech.iceon.final)
 
 ############################# finalize df ###################################
 
