@@ -190,7 +190,8 @@ Stech.ice$Date <- as.Date(Stech.ice$Date, "%m/%d/%Y")
 
 #only include dates that will overlap with chem data (1990 onward)
 
-Stech.ice.filt <- filter(Stech.ice, Date >= "1990-01-01")
+Stech.overlap.yrs <- filter(Stech.ice, Date >= "1990-01-01")
+
 
 ## This script takes the ice dates that Hans-Peter Grossart sent us for Lake
 ## Stechlin and expands the data frame of dates so that there is a row for each
@@ -204,10 +205,10 @@ Stech.ice.filt <- filter(Stech.ice, Date >= "1990-01-01")
 # (here we do not have a precise winter range ahead of time)
 # the whole year will be filled in
 # and data is later filtered to include only days with >+80% snow+ice
-  
+
 
 ## Find the min and max dates each year
-startend <- Stech.ice.filt %>%
+startend <- Stech.overlap.yrs %>%
   group_by(year(Date)) %>%
   #by year get min date, max date, and diff
   summarize(min = min(Date), max = max(Date), diff = max - min)
@@ -228,9 +229,11 @@ alldates <- data.frame(Date = do.call("c", seqs))
 
 ## Merge the data frame back in with Stech.ice.filt and use na.locf to fill in missing values
 
-Stech.ice.full <- merge(Stech.ice.filt, alldates, by="Date", all = TRUE) %>%
+Stech.full.years <- merge(Stech.overlap.yrs, alldates, by="Date", all = TRUE) %>%
   mutate(Ice = na.locf(Ice), #fills in ice values (runs last value forward through NAs until hit next value)
          Snow = na.locf(Snow))#fills in snow values 
+
+
 
 
 ###################### Stechlin summer stratification #######################
@@ -270,7 +273,8 @@ dev.off()
 
 #so subset chem data for between May - Oct. of each year
 
-######################## merge ice and chem/pr data ##############################
+
+######################## merge ice/summer and chem/pr data ##############################
 
 #only keep overlapping dates (dates in BOTH ice and chem data frames)
 #resulting dates will fall between 1990-1997
@@ -278,24 +282,14 @@ dev.off()
 #while chem data goes from 1990-2015
 
 
-Stech.ice.chem <- merge(Stech.ice.full, Stech.pr.chem, by="Date")
-
-#390 observations
-
-
-#checking merge:
-#ice data starts 11/1/1990 and only goes through 2/28/1997
-#so merge should have same number of obs. as Stech.pr.chem filtered by these dates
-
-test2 <- filter(Stech.pr.chem, Date >= "1990-11-01" & Date < "1997-03-01")
-
-#390 obs, same as Stech.ice.chem
+Stech.fullyr.chem <- merge(Stech.full.years, Stech.pr.chem, by="Date")
 
 
 ## filter to only include rows with ice+snow >= 80 and corresponding summer data
+
 #the 80% cut off is HPG definition of "ice-on"
 
-Stech.ice.chem.filt <- filter(Stech.ice.chem, Ice + Snow >= 80)
+Stech.ice.chem <- filter(Stech.fullyr.chem, Ice + Snow >= 80)
 
 #there are 4 rows total, all from 1996-02-14
 #ice is listed as zero but snow at 100%
@@ -310,18 +304,18 @@ Stech.ice.chem.filt <- filter(Stech.ice.chem, Ice + Snow >= 80)
 #which would meet ice+snow iceon conditions
 
 ## Add corresponding summer data
-corresponding_summer <- filter(Stech.ice.chem,
-                               year(Date) %in% year(Stech.ice.chem.filt$Date)
-                               & month(Date) >= 5 & month(Date) <= 10
-                               & Depth <= PhoticDepth)
+corresponding_summer <- filter(Stech.fullyr.chem,
+                               year(Date) %in% year(Stech.ice.chem$Date) #keep only chem data from years that have iceon agg
+                               & month(Date) >= 5 & month(Date) <= 10 #in those years keep only summer months
+                               & Depth <= PhoticDepth) #keep only if depth <= photic depth
 
 
 ## Join the winter and summer data together
-Stech.ice.chem.filt <- rbind(Stech.ice.chem.filt, corresponding_summer)
+Stech.chem.full <- rbind(Stech.ice.chem, corresponding_summer)
 
 
 ## compute seasonal averages for chemistry data
-seasonal_chem <- Stech.ice.chem.filt %>%
+seasonal_chem <- Stech.chem.full %>%
   ## Add season column
   mutate(season = ifelse(month(Date) >= 5 & month(Date) <= 10, "iceoff", "iceon")) %>%
   ## First find max sampling depth for each date; will need this to calculate
@@ -363,8 +357,6 @@ seasonal_chem <- Stech.ice.chem.filt %>%
   ## Add year column
   mutate(year = year(EndDate))
 
-#mean water temp double checked in excel
-#2.6 is indeed the average temp within 0-20 m (photic zone) for 2/14/1996 (sample date)
 
 #################### add in water temp data ####################
 
@@ -384,7 +376,7 @@ Stech.tmp$Secchi <- NULL
 ## Aggregate
 Stech.tmp.agg <- Stech.tmp %>%
   ## keep only dates of interest -- those that match chemistry data
-  filter(Date %in% Stech.ice.chem.filt$Date) %>%
+  filter(Date %in% Stech.chem.full$Date) %>%
   ## join with photic depth info and keep only rows from within photic depth
   merge(Stech.pr.pd) %>%
   filter(Depth <= PhoticDepth) %>%
@@ -393,7 +385,7 @@ Stech.tmp.agg <- Stech.tmp %>%
          season = ifelse(month(Date) >= 5 & month(Date) <= 10, "iceoff", "iceon")) %>%
   group_by(season, year) %>%
   summarize(watertemp = mean(Temp, na.rm = TRUE))
-  
+
 
 ## combine with ice/chem df
 Stech.agg.final <- merge(seasonal_chem, Stech.tmp.agg, by = c("year", "season"))
@@ -404,12 +396,12 @@ Stech.agg.final <- merge(seasonal_chem, Stech.tmp.agg, by = c("year", "season"))
 #convert month to abbrev
 
 Stech.agg.final <- mutate(Stech.agg.final,
-                            startday = day(StartDate),
-                            startmonth = month.abb[month(StartDate)],
-                            startyear = year(StartDate),
-                            endday = day(EndDate),
-                            endmonth = month.abb[month(EndDate)],
-                            endyear = year(EndDate))
+                          startday = day(StartDate),
+                          startmonth = month.abb[month(StartDate)],
+                          startyear = year(StartDate),
+                          endday = day(EndDate),
+                          endmonth = month.abb[month(EndDate)],
+                          endyear = year(EndDate))
 
 Stech.agg.final <- select(Stech.agg.final, -StartDate, -EndDate)
 
@@ -418,25 +410,25 @@ Stech.agg.final <- select(Stech.agg.final, -StartDate, -EndDate)
 
 
 Stechlin.agg.final <- Stech.agg.final %>% 
-    mutate(researcher = "Hans Peter Grossart", 
-          lakename = "Lake Stechlin",
-          lakeregloc = "Brandenburg",
-          lakecountry = "Germany", 
-          lakearea = 4.52, 
-          lakemeandepth = 24, 
-          lakemaxdepth = 69.5, 
-          lakeelevation = 60, 
-          Watershedarea = 12.4,
-          stationlat = 53.15, 
-          stationlong = 13.03, 
-          multiplestations = "no",
-          samplenarrat = "photic depth calculated: ln(1000)/(1.7/Secchi)",
-          sampletype = "in situ",
-          icenarrat = "Ice-on condition if ice + snow >= 80% coverage",
-          sidata = "no",
-          fadata = "no",
-          gutdata = "no",
-          profiles = "yes, raw data sent in")
+  mutate(researcher = "Hans Peter Grossart", 
+         lakename = "Lake Stechlin",
+         lakeregloc = "Brandenburg",
+         lakecountry = "Germany", 
+         lakearea = 4.52, 
+         lakemeandepth = 24, 
+         lakemaxdepth = 69.5, 
+         lakeelevation = 60, 
+         watershedarea = 12.4,
+         stationlat = 53.15, 
+         stationlong = 13.03, 
+         multiplestations = "no",
+         samplenarrat = "photic depth calculated: ln(1000)/(1.7/Secchi)",
+         sampletype = "in situ",
+         icenarrat = "Ice-on condition if ice + snow >= 80% coverage",
+         sidata = "no",
+         fadata = "no",
+         gutdata = "no",
+         profiles = "yes, raw data sent in")
 
 ## All remaining columns should be NAs
 Stechlin.agg.final[, datafields[!datafields %in% names(Stechlin.agg.final)]] <- NA
@@ -444,6 +436,5 @@ Stechlin.agg.final[, datafields[!datafields %in% names(Stechlin.agg.final)]] <- 
 #re-order columns 
 
 Stechlin.agg <- Stechlin.agg.final[, datafields]
-
 
 
