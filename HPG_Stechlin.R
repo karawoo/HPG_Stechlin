@@ -3,9 +3,21 @@
 #############################################
 
 
-# This code takes the HPG raw chemistry, probe, and ice days data provided by
-# HPG for Lake Stechlin and converts, reorganizes, and aggregates the data
-# to meet the specifications of the under ice ecology template and instructions
+## This code takes the HPG raw chemistry, probe, and ice days data provided by
+## HPG for Lake Stechlin and converts, reorganizes, and aggregates the data to
+## meet the specifications of the under ice ecology template and instructions.
+## The original researcher, Hans-Peter Grossart, defined ice-on periods as those
+## with 80% ice cover; we are using this to define the ice season. The chemistry
+## data provided generally comes from ice-free times; only in one year (1996) is
+## there data from the ice-covered period as defined by HPG's 80% cutoff. Plots
+## of temperature depth profiles confirm HPG's assertion that summer
+## stratification occurs between May and October, therefore we use these months
+## to define the stratification period. Although there is plenty of summertime
+## data, we only aggregate data from summers for which there is corresponding
+## winter data (i.e. only 1996.)
+
+## S. Labou & K. Woo
+## Last updated 2015-07-08
 
 library("icetest")
 library("dplyr")
