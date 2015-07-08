@@ -424,7 +424,9 @@ Stechlin.agg.final <- Stech.agg.final %>%
          multiplestations = "no",
          samplenarrat = "photic depth calculated: ln(1000)/(1.7/Secchi)",
          sampletype = "in situ",
-         icenarrat = "Ice-on condition if ice + snow >= 80% coverage",
+         icenarrat = paste("Ice-on condition if ice + snow >= 80% coverage; ice-free period",
+                      "estimated based on temperature profiles (consistently stratified months",
+                      "across years)"), 
          sidata = "no",
          fadata = "no",
          gutdata = "no",
@@ -436,5 +438,4 @@ Stechlin.agg.final[, datafields[!datafields %in% names(Stechlin.agg.final)]] <- 
 #re-order columns 
 
 Stechlin.agg <- Stechlin.agg.final[, datafields]
-
 
