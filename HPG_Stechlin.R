@@ -28,8 +28,8 @@ library("lubridate")
 # were removed prior to importing
 
 
-Stech.chem <- read.csv("hans_peter_grossart_data_DONOTSHARE/Stechlin_chemistry_1990.2015.csv", stringsAsFactors = FALSE)
-
+## Stech.chem <- read.csv("hans_peter_grossart_data_DONOTSHARE/Stechlin_chemistry_1990.2015.csv", stringsAsFactors = FALSE)
+Stech.chem <- read.csv("Stechlin_chemistry_1990.2015.csv", stringsAsFactors = FALSE)
 
 #create new dataframe with date, TP, TN, all N, DOC, and Chla
 
@@ -93,7 +93,7 @@ Stech.go <- Stech.cor[keep2]
 # As with the chemistry data, rows of text at top and bottom
 # of spreadsheet were removed prior to importing
 
-
+## Stech.probe <- read.csv("hans_peter_grossart_data_DONOTSHARE/St_1990-2015_probe.csv", stringsAsFactors = FALSE)
 Stech.probe <- read.csv("St_1990-2015_probe.csv", stringsAsFactors = FALSE,
                         fileEncoding = "latin1")
 
