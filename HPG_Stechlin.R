@@ -8,6 +8,12 @@
 # to meet the specifications of the under ice ecology template and instructions
 
 library("icetest")
+library("dplyr")
+library("lubridate")
+library("zoo")
+library("ggplot2")
+library("scales")
+library("lubridate")
 
 #### set working directory ####
 
@@ -46,8 +52,6 @@ Stech.vars$Datum <- as.Date(Stech.vars$Datum, "%m/%d/%Y")
 #chla needs to be ug/l
 
 ### Doc stays mg/l
-
-library(dplyr)
 
 Stech.calc <- mutate(Stech.vars,
                      TP = (TP..mg.l. * 1000),
@@ -188,10 +192,6 @@ Stech.ice.filt <- filter(Stech.ice, Date >= "1990-01-01")
 # (here we do not have a precise winter range ahead of time)
 # the whole year will be filled in
 # and data is later filtered to include only days with >+80% snow+ice
-
-
-library("lubridate")
-library("zoo")
   
 
 ## Find the min and max dates each year
@@ -231,10 +231,6 @@ Stech.pr.pro$Secchi = NULL
 
 
 ## Function to plot profiles for each date in a given year
-
-library(ggplot2)
-library(scales)
-library(lubridate)
 
 st_prof <- function(data, year) {
   data %>%
