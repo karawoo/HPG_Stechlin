@@ -358,6 +358,13 @@ seasonal_chem <- Stech.chem.full %>%
   mutate(year = year(EndDate))
 
 
+#replace any NaNs in any ave/cv/max column with NA
+
+seasonal_chem[, grep("^(ave|cv|max)", names(seasonal_chem))] <- 
+  apply(seasonal_chem[, grep("^(ave|cv|max)", names(seasonal_chem))],
+        c(1,2), function(x) ifelse(is.nan(x), NA, x))
+
+
 #################### add in water temp data ####################
 
 #probe data (including water temp) sampled at different depths than chem data
